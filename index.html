@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>estalecas · apostas demonstrativas</title>
+  <meta name="description" content="Simulador de apostas em futebol com moeda fictícia (estalecas). Jogos, placares e resultados reais.">
+  <meta name="theme-color" content="#0b0f14">
+  <link rel="icon" href="assets/coin.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="demo-bar">
+    <strong>Site demonstrativo.</strong> Estalecas são moeda fictícia, sem valor real. Nenhum dinheiro de verdade é apostado.
+  </div>
+
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="estalecas — início">
+      <img src="assets/coin.svg" alt="" width="30" height="30">
+      <span>estalecas</span>
+    </a>
+    <div class="wallet">
+      <button id="bonusBtn" class="btn-ghost" type="button">+100 bônus diário</button>
+      <div class="balance" title="Seu saldo em estalecas">
+        <span class="label">Saldo</span>
+        <strong id="balance" class="mono">—</strong>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="games" aria-label="Jogos">
+      <nav class="days" id="days" aria-label="Escolher dia"></nav>
+
+      <div class="toolbar">
+        <div class="seg" id="statusFilter" role="tablist">
+          <button type="button" data-f="all" class="active">Todos <em></em></button>
+          <button type="button" data-f="live">Ao vivo <em></em></button>
+          <button type="button" data-f="pre">Próximos <em></em></button>
+          <button type="button" data-f="post">Encerrados <em></em></button>
+        </div>
+        <select id="leagueFilter" aria-label="Filtrar campeonato"></select>
+      </div>
+      <p class="updated" id="updated"></p>
+
+      <div id="list"></div>
+    </section>
+
+    <div class="backdrop" id="backdrop"></div>
+    <aside class="side" id="side" aria-label="Cupom e apostas">
+      <div class="sheet-grip" id="sheetGrip"><span></span></div>
+      <div class="tabs">
+        <button type="button" data-tab="slip" class="active">Cupom <span class="pill" id="slipCount">0</span></button>
+        <button type="button" data-tab="bets">Minhas apostas <span class="pill" id="openCount">0</span></button>
+      </div>
+      <div id="slipPanel" class="panel"></div>
+      <div id="betsPanel" class="panel" hidden></div>
+    </aside>
+  </main>
+
+  <button id="fab" class="fab" type="button">
+    <span>Cupom</span><b id="fabCount">0</b>
+  </button>
+
+  <footer class="foot">
+    <p><strong>estalecas</strong> é um projeto demonstrativo/educacional. Nenhum depósito, saque ou prêmio real existe aqui.</p>
+    <p>Jogos, horários, placares ao vivo e resultados: API pública da ESPN. As cotações são geradas pelo próprio site (modelo simples baseado na campanha dos times) quando não há cotação de mercado disponível.</p>
+    <p>Apostas reais envolvem risco e são proibidas para menores de 18 anos.</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
