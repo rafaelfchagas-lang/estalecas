@@ -43,7 +43,9 @@ body {
   color: var(--text);
   font: 15px/1.45 var(--font);
   min-height: 100vh;
+  overflow-x: hidden;
 }
+.games { min-width: 0; }
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; }
@@ -304,7 +306,7 @@ select {
 
 /* ---------- mobile ---------- */
 @media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; padding-top: 14px; }
+  .layout { grid-template-columns: minmax(0, 1fr); padding-top: 14px; }
   .side {
     position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 60;
     border-radius: 20px 20px 0 0; max-height: 86vh; border-bottom: 0;
@@ -328,14 +330,23 @@ select {
   .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
 }
 @media (max-width: 620px) {
-  .match { grid-template-columns: 1fr; }
+  .match { grid-template-columns: minmax(0, 1fr); }
   .odds { grid-template-columns: repeat(3, 1fr); }
   .extra { grid-template-columns: 1fr; }
-  .btn-ghost { padding: 7px 9px; font-size: 12px; }
-  .balance { min-width: 0; }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .seg button { flex: 1; padding: 7px 4px; font-size: 12.5px; }
+  .seg button em { display: none; }
+  select { width: 100%; }
+  .topbar { padding: 10px 14px; }
+  .btn-ghost { padding: 7px 8px; font-size: 12px; }
+  .balance { min-width: 0; padding-left: 30px; }
+  .balance strong { font-size: 15px; }
   .brand { font-size: 19px; }
 }
-@media (max-width: 380px) {
+@media (max-width: 460px) {
+  .hide-sm { display: none; }
+}
+@media (max-width: 330px) {
   .brand span { display: none; }
 }
 
@@ -409,7 +420,10 @@ select {
  */
 'use strict';
 (() => {
-  const API = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
+  // A ESPN tem dois hosts com a mesma API; tenta um e, se falhar, o outro.
+  const HOSTS = ['https://site.web.api.espn.com', 'https://site.api.espn.com'];
+  const API_PATH = '/apis/site/v2/sports/soccer';
+  let hostIdx = 0;
   const STORE_KEY = 'estalecas:v1';
   const START_BALANCE = 1000;
   const DAILY_BONUS = 100;
@@ -495,6 +509,15 @@ select {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
   }
+  async function espn(path) {
+    let err;
+    for (let k = 0; k < HOSTS.length; k++) {
+      const i = (hostIdx + k) % HOSTS.length;
+      try { const j = await getJSON(HOSTS[i] + API_PATH + path); hostIdx = i; return j; }
+      catch (e) { err = e; }
+    }
+    throw err;
+  }
 
   function american(ml) {
     const n = Number(ml);
@@ -579,11 +602,13 @@ select {
     const key = dayKey(day);
     const seq = ++state.reqSeq;
     if (!silent) { state.loadingKey = key; renderList(); }
-    const range = `${ymd(addDays(day, -1))}-${ymd(addDays(day, 1))}`;
-    const results = await Promise.allSettled(LEAGUES.map((lg) =>
-      getJSON(`${API}/${lg.slug}/scoreboard?dates=${range}&limit=300`)
+    // A ESPN não aceita mais intervalo de datas (dá erro 400): consulta dia a dia.
+    // Busca o dia anterior e o seguinte também, por causa da diferença de fuso.
+    const dates = [addDays(day, -1), day, addDays(day, 1)].map(ymd);
+    const results = await Promise.allSettled(LEAGUES.flatMap((lg) => dates.map((dt) =>
+      espn(`/${lg.slug}/scoreboard?dates=${dt}&limit=200`)
         .then((j) => (j.events || []).map((ev) => normEvent(ev, lg)))
-    ));
+    )));
     const ok = results.filter((r) => r.status === 'fulfilled');
     const seen = new Set();
     const list = [];
@@ -693,7 +718,7 @@ select {
     const settled = [];
     for (const [id, league] of [...pend].slice(0, 25)) {
       try {
-        const j = await getJSON(`${API}/${league}/summary?event=${id}`);
+        const j = await espn(`/${league}/summary?event=${id}`);
         const comp = j?.header?.competitions?.[0];
         if (!comp) continue;
         const t = comp.status?.type || {};
@@ -794,7 +819,7 @@ select {
     const today = dayKey(new Date());
     const b = $('#bonusBtn');
     b.disabled = wallet.lastBonus === today;
-    b.textContent = b.disabled ? 'Bônus resgatado ✓' : `+${DAILY_BONUS} bônus diário`;
+    b.innerHTML = b.disabled ? '✓<span class="hide-sm"> Bônus resgatado</span>' : `+${DAILY_BONUS}<span class="hide-sm"> bônus diário</span>`;
   }
   function bumpBalance() {
     renderBalance();
